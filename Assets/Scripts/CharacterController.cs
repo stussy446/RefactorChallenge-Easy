@@ -11,6 +11,7 @@ namespace LongMethod
         [Header("Character Controls")]
         [SerializeField] private float _moveSpeed = 7f;
         [SerializeField] private float _jumpHeight = 10f;
+        [SerializeField] private float _rotationSpeed = 45f;
 
         private Rigidbody _rigibody;
 
@@ -24,8 +25,7 @@ namespace LongMethod
         {
             Move();
             Jump();
-
-            transform.localRotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 45 * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
+            Rotate();
 
             var t = transform.Find("Main Camera").transform;
             var xRot = t.localRotation.eulerAngles.x - 45 * Input.GetAxis("Mouse Y") * Time.deltaTime;
@@ -47,6 +47,16 @@ namespace LongMethod
             if (Input.GetButtonDown("Jump"))
                 _rigibody.velocity = Vector3.up * _jumpHeight;
         }
+
+        private void Rotate()
+        {
+            float xRotation = 0f;
+            float yRotation = transform.rotation.eulerAngles.y + _rotationSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
+            float zRotation = 0f;
+
+            transform.localRotation = Quaternion.Euler(xRotation, yRotation, zRotation);
+        }
+
 
         private static void LockCursor()
         {
