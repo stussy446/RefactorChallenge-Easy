@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LongMethod
@@ -8,10 +6,14 @@ namespace LongMethod
     [RequireComponent(typeof(Rigidbody))]
     public class CharacterController : MonoBehaviour
     {
-        [Header("Character Controls")]
+        [Header("Character Movement Configs")]
         [SerializeField] private float _moveSpeed = 7f;
         [SerializeField] private float _jumpHeight = 10f;
+
+        [Header("Rotation Configs")]
         [SerializeField] private float _rotationSpeed = 45f;
+        [SerializeField] private float _minRotation = 10f;
+        [SerializeField] private float _maxRotation = 35f;
 
         private Rigidbody _rigibody;
 
@@ -23,32 +25,23 @@ namespace LongMethod
 
         void Update()
         {
-            Move();
+            MovePlayer();
+            RotatePlayer();
             Jump();
-            Rotate();
 
-            var t = transform.Find("Main Camera").transform;
-            var xRot = t.localRotation.eulerAngles.x - 45 * Input.GetAxis("Mouse Y") * Time.deltaTime;
-            if (xRot > 35) xRot = 35; else if (xRot < 10) xRot = 10;
-            t.localRotation = Quaternion.Euler(xRot, 0, 0);
+            RotatePlayerCamera();
         }
 
-        private void Move()
+        private void MovePlayer()
         {
             Vector3 horizantalMovement = Input.GetAxis("Horizontal") * transform.right;
             Vector3 verticalMovement = Input.GetAxis("Vertical") * transform.forward.normalized;
-            Vector3 finalMovement = horizantalMovement + verticalMovement;
 
-            transform.position += finalMovement * Time.deltaTime * _moveSpeed;
+            Vector3 combinedMovement = horizantalMovement + verticalMovement;
+
+            transform.position += combinedMovement * Time.deltaTime * _moveSpeed;
         }
-
-        private void Jump()
-        {
-            if (Input.GetButtonDown("Jump"))
-                _rigibody.velocity = Vector3.up * _jumpHeight;
-        }
-
-        private void Rotate()
+        private void RotatePlayer()
         {
             float xRotation = 0f;
             float yRotation = transform.rotation.eulerAngles.y + _rotationSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
@@ -57,7 +50,24 @@ namespace LongMethod
             transform.localRotation = Quaternion.Euler(xRotation, yRotation, zRotation);
         }
 
+        private void Jump()
+        {
+            if (Input.GetButtonDown("Jump"))
+                _rigibody.velocity = Vector3.up * _jumpHeight;
+        }
 
+        private void RotatePlayerCamera()
+        {
+            Transform cameraTransform = Camera.main.transform;
+            float yRotation = 0f;
+            float zRotation = 0f;
+
+            float rawXRotation = cameraTransform.localRotation.eulerAngles.x - _rotationSpeed * Input.GetAxis("Mouse Y") * Time.deltaTime;
+            float formattedXRotation = Math.Clamp(rawXRotation, _minRotation, _maxRotation);
+
+            cameraTransform.localRotation = Quaternion.Euler(formattedXRotation, yRotation, zRotation);
+        }
+        
         private static void LockCursor()
         {
             Cursor.lockState = CursorLockMode.Locked;
