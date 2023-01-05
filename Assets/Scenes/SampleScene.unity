@@ -418,6 +418,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _moveSpeed: 7
   _jumpHeight: 10
+  _playerRotationSpeed: 45
+  _cameraRotationSpeed: 45
+  _minRotation: 10
+  _maxRotation: 35
 --- !u!54 &1076996441
 Rigidbody:
   m_ObjectHideFlags: 0
