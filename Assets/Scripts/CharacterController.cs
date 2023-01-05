@@ -1,40 +1,98 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LongMethod
 {
+    [RequireComponent(typeof(Rigidbody))]
     public class CharacterController : MonoBehaviour
     {
+        [Header("Player Movement Configs")]
+        [SerializeField] private float _moveSpeed = 7f;
+        [SerializeField] private float _jumpHeight = 10f;
+        [SerializeField] private float _playerRotationSpeed = 45f;
+      
+        [Header("Camera Rotation Configs")]
+        [SerializeField] private float _cameraRotationSpeed = 45f;
+        [SerializeField] private float _minRotation = 10f;
+        [SerializeField] private float _maxRotation = 35f;
+
+        private Rigidbody _rigibody;
+        private Transform _cameraTransform;
+
+        private void Awake()
+        {
+            _rigibody = GetComponent<Rigidbody>();
+        }
+
+        private void Start()
+        {
+            _cameraTransform = Camera.main.transform;
+            LockCursor();
+        }
+
         void Update()
         {
-            // Keeps cursor locked in game window
-            Cursor.lockState = CursorLockMode.Locked;
+            MovePlayer();
+            RotatePlayer();
+            Jump();
 
-            var mov = (Input.GetAxis("Horizontal") * transform.right + Input.GetAxis("Vertical") * transform.forward) .normalized;
-            transform.position += mov * Time.deltaTime * 7;
-
-            if (Input.GetButtonDown("Jump"))
-                GetComponent<Rigidbody>().velocity = Vector3.up * 10;
-
-
-
-            transform.localRotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 45 * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
-
-            var t = transform.Find("Main Camera").transform;
-            var xRot = t.localRotation.eulerAngles.x - 45 * Input.GetAxis("Mouse Y") * Time.deltaTime;
-            if (xRot > 35) xRot = 35; else if (xRot < 10) xRot = 10;
-            t.localRotation = Quaternion.Euler(xRot, 0, 0);
-
-
+            RotatePlayerCamera();
         }
 
-        void Awake()
+        /// <summary>
+        /// Handles player movement by manipulating the player's transform position with the horizontal and vertical
+        /// axes values and a movement speed
+        /// </summary>
+        private void MovePlayer()
         {
+            Vector3 horizantalMovement = Input.GetAxis("Horizontal") * transform.right;
+            Vector3 verticalMovement = Input.GetAxis("Vertical") * transform.forward.normalized;
+            Vector3 combinedMovement = horizantalMovement + verticalMovement;
 
+            transform.position += combinedMovement * Time.deltaTime * _moveSpeed;
         }
 
-        void Start() {}
+        /// <summary>
+        /// Handles player rotation based on the mouse x axis and a rotation speed
+        /// </summary>
+        private void RotatePlayer()
+        {
+            float xRotation = 0f;
+            float yRotation = transform.rotation.eulerAngles.y + _playerRotationSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
+            float zRotation = 0f;
+
+            transform.localRotation = Quaternion.Euler(xRotation, yRotation, zRotation);
+        }
+
+        /// <summary>
+        /// Handles player jumping based on a jump button press, player character jumps up to a height based on the jump Height provided
+        /// </summary>
+        private void Jump()
+        {
+            if (Input.GetButtonDown("Jump"))
+                _rigibody.velocity = Vector3.up * _jumpHeight;
+        }
+
+        /// <summary>
+        /// Rotates the camera within a minimum and maximum set range based on the y mouse axis and a camera rotation speed
+        /// </summary>
+        private void RotatePlayerCamera()
+        {
+            float yRotation = 0f;
+            float zRotation = 0f;
+
+            float rawXRotation = _cameraTransform.localRotation.eulerAngles.x - _cameraRotationSpeed * Input.GetAxis("Mouse Y") * Time.deltaTime;
+            float formattedXRotation = Math.Clamp(rawXRotation, _minRotation, _maxRotation);
+
+            _cameraTransform.localRotation = Quaternion.Euler(formattedXRotation, yRotation, zRotation);
+        }
+        
+        /// <summary>
+        /// locks the computer's cursor
+        /// </summary>
+        private static void LockCursor()
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
     }
 }
